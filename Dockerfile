@@ -1,12 +1,19 @@
 # syntax=docker/dockerfile:1
 FROM python:3.9-slim
 
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 WORKDIR /code
 
-COPY ./requirements.txt /code/requirements.txt
+# Copy project files
+COPY pyproject.toml .
+COPY src ./src
 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+# Install dependencies with uv
+RUN uv sync --frozen
 
-COPY ./app /code/app
+# Set environment variable to use the virtual environment
+ENV PATH="/code/.venv/bin:$PATH"
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "80"]
