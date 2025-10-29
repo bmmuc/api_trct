@@ -6,7 +6,7 @@ import os
 from typing import Dict, Optional, List
 from pathlib import Path
 from datetime import datetime
-from models.anomaly_model import AnomalyDetectionModel
+from src.models.anomaly_model import AnomalyDetectionModel
 
 
 class ModelStore:
@@ -22,21 +22,32 @@ class ModelStore:
         Args:
             storage_path: Directory path where models will be stored
         """
-        pass
+        self.storage_path = Path(storage_path)
+        self.storage_path.mkdir(parents=True, exist_ok=True)
 
     def _get_series_dir(self, series_id: str) -> Path:
         """Get directory path for a specific series."""
-        pass
+        series_dir = self.storage_path / series_id
+        series_dir.mkdir(parents=True, exist_ok=True)
+        return series_dir
 
-    def _generate_version(self) -> str:
-        """Generate a version identifier based on timestamp."""
-        pass
+    def _generate_version(self, series_id: str) -> str:
+        """Generate a version identifier based on an incrementing number."""
+        versions = self.list_versions(series_id)
+        if not versions:
+            return "v0"
+
+        latest_version = versions[-1]
+        version_number = int(latest_version.lstrip('v'))
+        return f"v{version_number + 1}"
 
     def _get_model_path(self, series_id: str, version: str) -> Path:
         """Get file path for a specific model version."""
-        pass
+        return self._get_series_dir(series_id) / f"{version}.json"
 
-    def save_model(self, series_id: str, model: AnomalyDetectionModel, version: Optional[str] = None) -> str:
+    def save_model(self, series_id: str,
+                   model: AnomalyDetectionModel,
+                   version: Optional[str] = None) -> str:
         """
         Save a trained model with versioning.
 
@@ -48,9 +59,28 @@ class ModelStore:
         Returns:
             Version identifier of the saved model
         """
-        pass
+        if not model._is_fitted:
+            raise ValueError("Cannot save an unfitted model")
 
-    def load_model(self, series_id: str, version: Optional[str] = None) -> tuple[AnomalyDetectionModel, str]:
+        if version is None:
+            version = self._generate_version(series_id)
+
+        model_path = self._get_model_path(series_id, version)
+
+        model_data = {
+            "series_id": series_id,
+            "version": version,
+            "model_params": model.to_dict(),
+            "saved_at": datetime.utcnow().isoformat()
+        }
+
+        with open(model_path, 'w') as f:
+            json.dump(model_data, f, indent=2)
+
+        return version
+
+    def load_model(self, series_id: str,
+                   version: Optional[str] = None) -> tuple[AnomalyDetectionModel, str]:
         """
         Load a trained model.
 
@@ -60,11 +90,22 @@ class ModelStore:
 
         Returns:
             Tuple of (model, version)
-
-        Raises:
-            FileNotFoundError: If no model exists for the series_id
         """
-        pass
+        if version is None:
+            version = self.get_latest_version(series_id)
+            if version is None:
+                raise FileNotFoundError(f"No models found for series_id: {series_id}")
+        model_path = self._get_model_path(series_id, version)
+
+        if not model_path.exists():
+            raise FileNotFoundError(f"Model not found: {series_id}/{version}")
+
+        with open(model_path, 'r') as f:
+            model_data = json.load(f)
+        model = AnomalyDetectionModel()
+        model = model.from_dict(model_data["model_params"])
+
+        return model, version
 
     def get_latest_version(self, series_id: str) -> Optional[str]:
         """
@@ -76,7 +117,8 @@ class ModelStore:
         Returns:
             Latest version string or None if no versions exist
         """
-        pass
+        versions = self.list_versions(series_id)
+        return versions[-1] if versions else None
 
     def list_versions(self, series_id: str) -> List[str]:
         """
@@ -88,7 +130,22 @@ class ModelStore:
         Returns:
             Sorted list of version strings
         """
-        pass
+        series_dir = self._get_series_dir(series_id)
+
+        if not series_dir.exists():
+            return []
+
+        versions = []
+
+        for file_path in series_dir.glob("*.json"):
+            name = file_path.stem
+            if not name:
+                continue
+
+            if name.startswith("v") and name[1:].isdigit():
+                versions.append(name)
+
+        return sorted(versions, key=lambda v: int(v.lstrip('v')))
 
     def list_all_series(self) -> List[str]:
         """
@@ -97,7 +154,16 @@ class ModelStore:
         Returns:
             List of series_id strings
         """
-        pass
+        if not self.storage_path.exists():
+            return []
+
+        series_dirs: List[str] = []
+        for entry in self.storage_path.iterdir():
+            if not entry.is_dir():
+                continue
+            if any(entry.glob("*.json")):
+                series_dirs.append(entry.name)
+        return series_dirs
 
     def model_exists(self, series_id: str, version: Optional[str] = None) -> bool:
         """
@@ -110,4 +176,13 @@ class ModelStore:
         Returns:
             True if model exists, False otherwise
         """
-        pass
+        try:
+            if version is None:
+                version = self.get_latest_version(series_id)
+                if version is None:
+                    return False
+
+            model_path = self._get_model_path(series_id, version)
+            return model_path.exists()
+        except Exception:
+            return False

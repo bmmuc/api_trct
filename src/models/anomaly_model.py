@@ -3,7 +3,7 @@ Anomaly Detection Model implementation.
 """
 from typing import Dict
 import numpy as np
-from models.schemas import TimeSeries, DataPoint
+from src.models.schemas import TimeSeries, DataPoint
 
 
 class AnomalyDetectionModel:
@@ -50,3 +50,32 @@ class AnomalyDetectionModel:
         """
         return data_point.value > self.mean + 3 * self.std
 
+    def to_dict(self) -> Dict:
+        """
+        Serialize the model to a dictionary.
+
+        Returns:
+            Dictionary representation of the model
+        """
+        if not self._is_fitted:
+            raise ValueError("Cannot serialize an unfitted model")
+
+        return {
+            "mean": self.mean,
+            "std": self.std
+        }
+
+    def from_dict(self, data: Dict) -> "AnomalyDetectionModel":
+        """
+        Load the model from a dictionary.
+
+        Args:
+            data: Dictionary containing model parameters
+
+        Returns:
+            Self for method chaining
+        """
+        self.mean = data["mean"]
+        self.std = data["std"]
+        self._is_fitted = True
+        return self

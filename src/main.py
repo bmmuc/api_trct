@@ -4,7 +4,7 @@ Main application entry point.
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import router
+from src.api.routes import router
 
 # Initialize FastAPI app
 app = FastAPI(

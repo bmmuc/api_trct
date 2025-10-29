@@ -1,15 +1,17 @@
 """API routes for anomaly detection service."""
 from typing import Optional
 from fastapi import APIRouter, Query
-from models.schemas import TrainData, TrainResponse,\
+from src.models.schemas import TrainData, TrainResponse,\
     PredictData, PredictResponse, HealthCheckResponse
-from services.anomaly_service import AnomalyDetectionService
-from storage.model_store import ModelStore
+from src.services.anomaly_service import AnomalyDetectionService
+from src.storage.model_store import ModelStore
+from src.utils.metrics import MetricsTracker
 
 router = APIRouter()
 
 model_store = ModelStore()
-anomaly_service = AnomalyDetectionService(model_store)
+metric_tracker = MetricsTracker()
+anomaly_service = AnomalyDetectionService(model_store, metric_tracker)
 
 
 @router.post("/fit/{series_id}", response_model=TrainResponse, tags=["Training"])
