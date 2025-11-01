@@ -1,6 +1,7 @@
 """
 Service layer for anomaly detection business logic.
 """
+import time
 from typing import Optional
 from src.models.anomaly_model import AnomalyDetectionModel
 from src.models.schemas import TrainData, DataPoint, TrainResponse, PredictResponse
@@ -20,6 +21,7 @@ class AnomalyDetectionService:
         Args:
             model_store: ModelStore instance for persistence
         """
+
         self.model_store = model_store
         self.metrics_tracker = metrics_tracker
 
@@ -35,6 +37,10 @@ class AnomalyDetectionService:
         Returns:
             TrainResponse with training details
         """
+
+        # Start timing
+        start_time = time.time()
+
         time_series = train_data.to_time_series()
 
         # Create and train model
@@ -43,6 +49,10 @@ class AnomalyDetectionService:
 
         # Save model with versioning
         version = self.model_store.save_model(series_id, model)
+
+        # Record latency in milliseconds
+        latency_ms = (time.time() - start_time) * 1000
+        self.metrics_tracker.record_training_latency(latency_ms)
 
         return TrainResponse(
             series_id=series_id,
@@ -68,10 +78,17 @@ class AnomalyDetectionService:
         Returns:
             PredictResponse with prediction and version used
         """
+        # Start timing
+        start_time = time.time()
+
         # Load model
         model, used_version = self.model_store.load_model(series_id, version)
 
         is_anomaly = model.predict(data_point)
+
+        # Record latency in milliseconds
+        latency_ms = (time.time() - start_time) * 1000
+        self.metrics_tracker.record_inference_latency(latency_ms)
 
         return PredictResponse(
             anomaly=is_anomaly,
