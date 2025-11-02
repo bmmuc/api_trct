@@ -3,3 +3,5 @@
 *.pdf
 *yaml
 .venv
+*.locks*
+model_storage

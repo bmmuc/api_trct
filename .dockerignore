@@ -1,0 +1,78 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+.coveragerc
+htmlcov/
+.tox/
+*.cover
+
+# IDEs
+.vscode/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Model storage (we'll mount as volume)
+model_storage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Test files
+test_*.py
+*_test.py
+tests/
+performance_test.py
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+
+# Makefile
+makefile
+Makefile
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# PDF and spec files
+*.pdf
+*.yaml
+!openapi_spec.yaml
+
+# Reports
+performance_report.*
