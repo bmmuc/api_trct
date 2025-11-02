@@ -2,7 +2,6 @@
 Unit tests for validation logic.
 """
 import pytest
-import math
 from src.models.schemas import TrainData, validate_series_id
 from src.exceptions import ValidationError, InvalidSeriesIdError
 
@@ -94,8 +93,8 @@ class TestTrainDataValidation:
 
     def test_to_time_series_mismatched_lengths(self):
         """Test mismatched array lengths."""
-        with pytest.raises(ValidationError) as exc_info:
-            data = TrainData(
+        with pytest.raises(ValidationError):
+            TrainData(
                 timestamps=[1, 2, 3],
                 values=[10.0, 10.5, 10.2, 10.3]  # Different length
             )
@@ -141,19 +140,28 @@ class TestSeriesIdValidation:
         """Test path traversal with /."""
         with pytest.raises(InvalidSeriesIdError) as exc_info:
             validate_series_id("path/to/file")
-        assert "path traversal" in str(exc_info.value.message).lower() or "invalid characters" in str(exc_info.value.message).lower()
+        assert (
+            "path traversal" in str(exc_info.value.message).lower()
+            or "invalid characters" in str(exc_info.value.message).lower()
+        )
 
     def test_path_traversal_backslash(self):
         """Test path traversal with backslash."""
         with pytest.raises(InvalidSeriesIdError) as exc_info:
             validate_series_id("path\\to\\file")
-        assert "path traversal" in str(exc_info.value.message).lower() or "invalid characters" in str(exc_info.value.message).lower()
+        assert (
+            "path traversal" in str(exc_info.value.message).lower()
+            or "invalid characters" in str(exc_info.value.message).lower()
+        )
 
     def test_special_characters(self):
         """Test special characters not allowed."""
         with pytest.raises(InvalidSeriesIdError) as exc_info:
             validate_series_id("sensor@001")
-        assert "invalid characters" in str(exc_info.value.message).lower() or "can only contain" in str(exc_info.value.message).lower()
+        assert (
+            "invalid characters" in str(exc_info.value.message).lower()
+            or "can only contain" in str(exc_info.value.message).lower()
+        )
 
     def test_too_long_series_id(self):
         """Test series_id that exceeds maximum length."""

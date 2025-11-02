@@ -9,7 +9,10 @@ import os
 from typing import Optional
 
 
-def setup_logger(name: str = "anomaly_detection", level: Optional[str] = None) -> logging.Logger:
+def setup_logger(
+    name: str = "anomaly_detection",
+    level: Optional[str] = None
+) -> logging.Logger:
     """
     Configure and return a logger with structured formatting.
 
@@ -26,12 +29,12 @@ def setup_logger(name: str = "anomaly_detection", level: Optional[str] = None) -
         level = os.getenv("LOG_LEVEL", "INFO").upper()
 
     # Create logger
-    logger = logging.getLogger(name)
-    logger.setLevel(getattr(logging, level, logging.INFO))
+    log_instance = logging.getLogger(name)
+    log_instance.setLevel(getattr(logging, level, logging.INFO))
 
     # Avoid adding handlers multiple times
-    if logger.handlers:
-        return logger
+    if log_instance.handlers:
+        return log_instance
 
     # Create console handler
     handler = logging.StreamHandler(sys.stdout)
@@ -45,9 +48,9 @@ def setup_logger(name: str = "anomaly_detection", level: Optional[str] = None) -
     handler.setFormatter(formatter)
 
     # Add handler to logger
-    logger.addHandler(handler)
+    log_instance.addHandler(handler)
 
-    return logger
+    return log_instance
 
 
 # Create default logger instance

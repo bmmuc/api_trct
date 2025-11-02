@@ -7,6 +7,7 @@ from src.storage.model_store import ModelStore
 from src.anomaly_models.anomaly_model import AnomalyDetectionModel
 from src.models.schemas import TrainData
 
+
 class TestModelStore(unittest.TestCase):
 
     def setUp(self):
@@ -32,14 +33,14 @@ class TestModelStore(unittest.TestCase):
         """Tests saving a new model."""
         series_id = "series-1"
         model = self._create_fitted_mock_model()
-        
+
         version = self.model_store.save_model(series_id, model)
         self.assertEqual(version, "v0")
 
         model_path = Path(self.test_dir) / series_id / "v0.json"
         self.assertTrue(model_path.exists())
 
-        with open(model_path, 'r') as f:
+        with open(model_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             self.assertEqual(data["series_id"], series_id)
             self.assertEqual(data["version"], "v0")
@@ -60,7 +61,7 @@ class TestModelStore(unittest.TestCase):
 
         loaded_model, loaded_version = self.model_store.load_model(series_id, version)
         self.assertIsInstance(loaded_model, AnomalyDetectionModel)
-        self.assertTrue(loaded_model._is_fitted)
+        self.assertTrue(loaded_model._is_fitted)  # noqa: SLF001 pylint: disable=protected-access
         self.assertEqual(loaded_version, version)
 
     def test_load_nonexistent_model_raises_error(self):
@@ -89,13 +90,14 @@ class TestModelStore(unittest.TestCase):
         """Tests loading the most recent version of a model."""
         series_id = "series-4"
         model = self._create_fitted_mock_model()
-        
-        self.model_store.save_model(series_id, model) # v0
-        self.model_store.save_model(series_id, model) # v1
 
-        loaded_model, loaded_version = self.model_store.load_model(series_id) # Without version specified
+        self.model_store.save_model(series_id, model)  # v0
+        self.model_store.save_model(series_id, model)  # v1
+
+        # Without version specified
+        loaded_model, loaded_version = self.model_store.load_model(series_id)
         self.assertEqual(loaded_version, "v1")
-        self.assertTrue(loaded_model._is_fitted)
+        self.assertTrue(loaded_model._is_fitted)  # noqa: SLF001 pylint: disable=protected-access
 
     def test_list_all_series(self):
         """Tests listing all series with saved models."""
@@ -104,7 +106,7 @@ class TestModelStore(unittest.TestCase):
         model.fit(self.train_data.to_time_series())
         self.model_store.save_model("series-a", model)
         self.model_store.save_model("series-b", model)
-        
+
         all_series = self.model_store.list_all_series()
         self.assertIn("series-a", all_series)
         self.assertIn("series-b", all_series)

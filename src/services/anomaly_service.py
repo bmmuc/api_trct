@@ -8,7 +8,7 @@ from src.models.schemas import TrainData, DataPoint, TrainResponse, PredictRespo
 from src.storage.model_store import ModelStore
 from src.utils.metrics import MetricsTracker
 from src.utils.logger import logger
-from src.exceptions import ModelNotFoundError, ModelNotFittedError
+from src.exceptions import ModelNotFoundError
 
 
 class AnomalyDetectionService:
@@ -26,7 +26,6 @@ class AnomalyDetectionService:
 
         self.model_store = model_store
         self.metrics_tracker = metrics_tracker
-
 
     def train_model(self, series_id: str, train_data: TrainData) -> TrainResponse:
         """
@@ -62,7 +61,6 @@ class AnomalyDetectionService:
             points_used=len(train_data.values)
         )
 
-
     def predict_anomaly(
         self,
         series_id: str,
@@ -86,9 +84,11 @@ class AnomalyDetectionService:
         # Load model - this will raise ModelNotFoundError if not found
         try:
             model, used_version = self.model_store.load_model(series_id, version)
-        except FileNotFoundError:
-            logger.warning(f"Model not found for series_id='{series_id}', version='{version}'")
-            raise ModelNotFoundError(series_id, version)
+        except FileNotFoundError as exc:
+            logger.warning(
+                "Model not found for series_id='%s', version='%s'", series_id, version
+            )
+            raise ModelNotFoundError(series_id, version) from exc
 
         is_anomaly = model.predict(data_point)
 

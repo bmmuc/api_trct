@@ -43,29 +43,40 @@ def validate_series_id(series_id: str) -> None:
 
 class DataPoint(BaseModel):
     """Represents a single data point in a time series."""
-    timestamp: int = Field(..., description="Unix timestamp of the time the data point was collected")
-    value: float = Field(..., description="Value of the time series measured at time `timestamp`")
+    timestamp: int = Field(
+        ..., description="Unix timestamp of the time the data point was collected"
+    )
+    value: float = Field(
+        ..., description="Value of the time series measured at time `timestamp`"
+    )
 
 
 class TimeSeries(BaseModel):
     """Represents a complete time series with multiple data points."""
     data: Sequence[DataPoint] = Field(
         ...,
-        description="List of datapoints, ordered in time, of subsequent measurements of some quantity"
+        description=(
+            "List of datapoints, ordered in time, "
+            "of subsequent measurements of some quantity"
+        )
     )
-
 
 
 class TrainData(BaseModel):
     """Request model for training endpoint."""
-    timestamps: List[int] = Field(..., description="Timestamp values should be in the unix timestamp format")
-    values: List[float] = Field(..., description="Values corresponding to each timestamp")
+    timestamps: List[int] = Field(
+        ..., description="Timestamp values should be in the unix timestamp format"
+    )
+    values: List[float] = Field(
+        ..., description="Values corresponding to each timestamp"
+    )
 
-    def model_post_init(self, __context):
+    def model_post_init(self, __context):  # noqa: ARG002
         """Validate that timestamps and values have the same length."""
         if len(self.timestamps) != len(self.values):
             raise ValidationError(
-                f"Timestamps ({len(self.timestamps)}) and values ({len(self.values)}) must have the same length"
+                f"Timestamps ({len(self.timestamps)}) and values "
+                f"({len(self.values)}) must have the same length"
             )
 
     @field_validator('timestamps')
@@ -129,7 +140,8 @@ class TrainData(BaseModel):
         """Convert TrainData to TimeSeries object."""
         if len(self.timestamps) != len(self.values):
             raise ValidationError(
-                f"Timestamps ({len(self.timestamps)}) and values ({len(self.values)}) must have the same length"
+                f"Timestamps ({len(self.timestamps)}) and values "
+                f"({len(self.values)}) must have the same length"
             )
 
         data_points = [
@@ -157,9 +169,12 @@ class PredictData(BaseModel):
         # Handle both string and int timestamps
         try:
             ts = int(self.timestamp)
-        except ValueError:
-            raise ValueError("Timestamp must be a valid integer or numeric string")
+        except ValueError as exc:
+            raise ValueError(
+                "Timestamp must be a valid integer or numeric string"
+            ) from exc
         return DataPoint(timestamp=ts, value=self.value)
+
 
 class PredictResponse(BaseModel):
     """Response model for prediction endpoint."""

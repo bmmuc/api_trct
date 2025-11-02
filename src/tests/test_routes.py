@@ -1,7 +1,6 @@
 """
 Integration tests for API routes.
 """
-import pytest
 from fastapi.testclient import TestClient
 from src.main import app
 
@@ -129,7 +128,7 @@ class TestPredictionEndpoint:
         assert data["anomaly"] is True
 
 
-class TestHealthCheckEndpoint:
+class TestHealthCheckEndpoint:  # pylint: disable=too-few-public-methods
     """Tests for /healthcheck endpoint."""
 
     def test_healthcheck_success(self):
@@ -185,7 +184,7 @@ class TestVisualizationEndpoint:
         assert response.status_code == 422
 
 
-class TestRootEndpoint:
+class TestRootEndpoint:  # pylint: disable=too-few-public-methods
     """Tests for root endpoint."""
 
     def test_root_endpoint(self):

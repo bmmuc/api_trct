@@ -18,7 +18,7 @@ from src.utils.logger import logger
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):  # noqa: ARG001
+async def lifespan(app: FastAPI):  # noqa: ARG001 pylint: disable=unused-argument, redefined-outer-name
     """
     Lifespan context manager for startup and shutdown events.
 

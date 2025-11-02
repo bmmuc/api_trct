@@ -6,7 +6,6 @@ dependencies into route handlers via the Depends() mechanism.
 
 """
 import threading
-from functools import lru_cache
 from fastapi import Depends
 from src.services.anomaly_service import AnomalyDetectionService
 from src.services.visualization_service import VisualizationService
@@ -27,7 +26,7 @@ def get_model_store() -> ModelStore:
     Returns:
         ModelStore: Singleton instance of ModelStore
     """
-    global _model_store_instance
+    global _model_store_instance  # pylint: disable=global-statement
 
     # Double-checked locking pattern
     if _model_store_instance is None:
@@ -46,7 +45,7 @@ def get_metrics_tracker() -> MetricsTracker:
     Returns:
         MetricsTracker: Singleton instance of MetricsTracker
     """
-    global _metrics_tracker_instance
+    global _metrics_tracker_instance  # pylint: disable=global-statement
 
     # Double-checked locking pattern
     if _metrics_tracker_instance is None:

@@ -1,8 +1,9 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from src.services.anomaly_service import AnomalyDetectionService
 from src.models.schemas import TrainData, DataPoint
 from src.anomaly_models.anomaly_model import AnomalyDetectionModel
+
 
 class TestAnomalyDetectionService(unittest.TestCase):
 
@@ -31,7 +32,7 @@ class TestAnomalyDetectionService(unittest.TestCase):
         self.mock_model_store.save_model.assert_called_once()
         saved_model_arg = self.mock_model_store.save_model.call_args[0][1]
         self.assertIsInstance(saved_model_arg, AnomalyDetectionModel)
-        self.assertTrue(saved_model_arg._is_fitted)
+        self.assertTrue(saved_model_arg._is_fitted)  # noqa: SLF001 pylint: disable=protected-access
 
         # Checks the response
         self.assertEqual(response.series_id, series_id)
@@ -77,11 +78,12 @@ class TestAnomalyDetectionService(unittest.TestCase):
     def test_get_trained_series_count(self):
         """Tests the count of trained series."""
         self.mock_model_store.list_all_series.return_value = ["series-1", "series-2"]
-        
+
         count = self.service.get_trained_series_count()
-        
+
         self.assertEqual(count, 2)
         self.mock_model_store.list_all_series.assert_called_once()
+
 
 if __name__ == '__main__':
     unittest.main()

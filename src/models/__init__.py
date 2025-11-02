@@ -13,7 +13,6 @@ from .schemas import (
 )
 
 __all__ = [
-    "AnomalyDetectionModel",
     "DataPoint",
     "TimeSeries",
     "TrainData",

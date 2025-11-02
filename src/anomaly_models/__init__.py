@@ -1,7 +1,7 @@
 """
  Anomaly models package.
  """
-from ..anomaly_models.anomaly_model import AnomalyDetectionModel
+from src.anomaly_models.anomaly_model import AnomalyDetectionModel
 
 __all__ = [
     "AnomalyDetectionModel",

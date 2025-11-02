@@ -104,7 +104,7 @@ class ModelStore:
         Returns:
             Version identifier of the saved model
         """
-        if not model._is_fitted:
+        if not model._is_fitted:  # noqa: SLF001 pylint: disable=protected-access
             raise ValueError("Cannot save an unfitted model")
 
         lock_path = self._get_lock_path(series_id)
@@ -124,7 +124,10 @@ class ModelStore:
             }
 
             self._atomic_write(model_path, model_data)
-            logger.info(f"Saved model: series_id='{series_id}', version='{version}' to {model_path}")
+            logger.info(
+                "Saved model: series_id='%s', version='%s' to %s",
+                series_id, version, model_path
+            )
 
         return version
 
@@ -152,21 +155,30 @@ class ModelStore:
                 versions = self._list_versions(series_id)
                 version = versions[-1] if versions else None
                 if version is None:
-                    logger.warning(f"No models found for series_id: {series_id}")
-                    raise FileNotFoundError(f"No models found for series_id: {series_id}")
+                    logger.warning("No models found for series_id: %s", series_id)
+                    raise FileNotFoundError(
+                        f"No models found for series_id: {series_id}"
+                    )
 
             model_path = self._get_model_path(series_id, version)
 
             try:
-                with open(model_path, 'r') as f:
+                with open(model_path, 'r', encoding='utf-8') as f:
                     model_data = json.load(f)
-                logger.debug(f"Loaded model: series_id='{series_id}', version='{version}' from {model_path}")
-            except FileNotFoundError:
-                logger.warning(f"Model file not found: {model_path}")
-                raise FileNotFoundError(f"Model not found: {series_id}/{version}")
+                logger.debug(
+                    "Loaded model: series_id='%s', version='%s' from %s",
+                    series_id, version, model_path
+                )
+            except FileNotFoundError as exc:
+                logger.warning("Model file not found: %s", model_path)
+                raise FileNotFoundError(
+                    f"Model not found: {series_id}/{version}"
+                ) from exc
             except json.JSONDecodeError as e:
-                logger.error(f"Corrupted model file: {model_path}")
-                raise ValueError(f"Corrupted model file: {series_id}/{version}") from e
+                logger.error("Corrupted model file: %s", model_path)
+                raise ValueError(
+                    f"Corrupted model file: {series_id}/{version}"
+                ) from e
 
             model = AnomalyDetectionModel()
             model = model.from_dict(model_data["model_params"])
@@ -272,5 +284,5 @@ class ModelStore:
 
                 model_path = self._get_model_path(series_id, version)
                 return model_path.exists()
-        except Exception:
+        except Exception:  # noqa: BLE001 pylint: disable=broad-except
             return False
