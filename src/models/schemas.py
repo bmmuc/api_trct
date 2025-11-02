@@ -2,7 +2,43 @@
 Pydantic models for Time Series data structures and API requests/responses.
 """
 from typing import Sequence, List
+import re
+import math
+import numpy as np
 from pydantic import BaseModel, Field, field_validator
+from src.exceptions import ValidationError, InvalidSeriesIdError
+
+
+def validate_series_id(series_id: str) -> None:
+    """
+    Validate series_id format to prevent path injection attacks.
+
+    Args:
+        series_id: The series identifier to validate
+
+    Raises:
+        InvalidSeriesIdError: If series_id contains invalid characters
+    """
+    if not series_id:
+        raise InvalidSeriesIdError(series_id, "series_id cannot be empty")
+
+    if '..' in series_id or '/' in series_id or '\\' in series_id:
+        raise InvalidSeriesIdError(
+            series_id,
+            "series_id cannot contain path traversal characters"
+        )
+
+    if not re.match(r'^[a-zA-Z0-9_\-\.]+$', series_id):
+        raise InvalidSeriesIdError(
+            series_id,
+            "series_id can only contain alphanumeric characters, underscores, hyphens, and dots"
+        )
+
+    if len(series_id) > 100:
+        raise InvalidSeriesIdError(
+            series_id,
+            f"series_id too long (max 100 characters, got {len(series_id)})"
+        )
 
 
 class DataPoint(BaseModel):
@@ -25,17 +61,76 @@ class TrainData(BaseModel):
     timestamps: List[int] = Field(..., description="Timestamp values should be in the unix timestamp format")
     values: List[float] = Field(..., description="Values corresponding to each timestamp")
 
-    @field_validator('timestamps', 'values')
+    def model_post_init(self, __context):
+        """Validate that timestamps and values have the same length."""
+        if len(self.timestamps) != len(self.values):
+            raise ValidationError(
+                f"Timestamps ({len(self.timestamps)}) and values ({len(self.values)}) must have the same length"
+            )
+
+    @field_validator('timestamps')
     @classmethod
-    def check_not_empty(cls, v):
+    def validate_timestamps(cls, v):
+        """Validate timestamp array."""
         if len(v) == 0:
-            raise ValueError("List cannot be empty")
+            raise ValidationError("Timestamps list cannot be empty", field="timestamps")
+
+        if len(v) < 3:
+            raise ValidationError(
+                f"Minimum 3 data points required for training, got {len(v)}",
+                field="timestamps"
+            )
+
+        # Check for timestamp ordering
+        if not all(v[i] <= v[i+1] for i in range(len(v)-1)):
+            raise ValidationError(
+                "Timestamps must be in ascending order",
+                field="timestamps"
+            )
+
+        return v
+
+    @field_validator('values')
+    @classmethod
+    def validate_values(cls, v):
+        """Validate values array."""
+        if len(v) == 0:
+            raise ValidationError("Values list cannot be empty", field="values")
+
+        if len(v) < 3:
+            raise ValidationError(
+                f"Minimum 3 data points required for training, got {len(v)}",
+                field="values"
+            )
+
+        # Check for NaN or Inf values
+        for i, val in enumerate(v):
+            if math.isnan(val):
+                raise ValidationError(
+                    f"NaN value detected at index {i}",
+                    field="values"
+                )
+            if math.isinf(val):
+                raise ValidationError(
+                    f"Infinite value detected at index {i}",
+                    field="values"
+                )
+
+        # Check for constant values (std = 0)
+        if len(v) >= 3 and np.std(v) == 0:
+            raise ValidationError(
+                "Cannot train on constant values (standard deviation is 0)",
+                field="values"
+            )
+
         return v
 
     def to_time_series(self) -> TimeSeries:
         """Convert TrainData to TimeSeries object."""
         if len(self.timestamps) != len(self.values):
-            raise ValueError("Timestamps and values must have the same length")
+            raise ValidationError(
+                f"Timestamps ({len(self.timestamps)}) and values ({len(self.values)}) must have the same length"
+            )
 
         data_points = [
             DataPoint(timestamp=ts, value=val)
@@ -68,6 +163,8 @@ class PredictData(BaseModel):
 
 class PredictResponse(BaseModel):
     """Response model for prediction endpoint."""
+    model_config = {"protected_namespaces": ()}
+
     anomaly: bool = Field(..., description="Whether the data point is anomalous")
     model_version: str = Field(..., description="Version of the model used for prediction")
 

@@ -1,7 +1,6 @@
 """
 Models package for anomaly detection.
 """
-from .anomaly_model import AnomalyDetectionModel
 from .schemas import (
     DataPoint,
     TimeSeries,
