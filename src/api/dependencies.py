@@ -9,6 +9,7 @@ import threading
 from functools import lru_cache
 from fastapi import Depends
 from src.services.anomaly_service import AnomalyDetectionService
+from src.services.visualization_service import VisualizationService
 from src.storage.model_store import ModelStore
 from src.utils.metrics import MetricsTracker
 
@@ -72,3 +73,18 @@ def get_anomaly_service(
         AnomalyDetectionService: New instance with injected dependencies
     """
     return AnomalyDetectionService(model_store, metrics_tracker)
+
+
+def get_visualization_service(
+    model_store: ModelStore = Depends(get_model_store)
+) -> VisualizationService:
+    """
+    Dependency provider for VisualizationService.
+
+    Args:
+        model_store: Injected by FastAPI via get_model_store()
+
+    Returns:
+        VisualizationService: New instance with injected dependencies
+    """
+    return VisualizationService(model_store)

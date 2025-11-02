@@ -4,7 +4,7 @@ import shutil
 import json
 from pathlib import Path
 from src.storage.model_store import ModelStore
-from src.models.anomaly_model import AnomalyDetectionModel
+from src.anomaly_models.anomaly_model import AnomalyDetectionModel
 from src.models.schemas import TrainData
 
 class TestModelStore(unittest.TestCase):

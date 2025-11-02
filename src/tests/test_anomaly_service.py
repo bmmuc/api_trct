@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from src.services.anomaly_service import AnomalyDetectionService
 from src.models.schemas import TrainData, DataPoint
-from src.models.anomaly_model import AnomalyDetectionModel
+from src.anomaly_models.anomaly_model import AnomalyDetectionModel
 
 class TestAnomalyDetectionService(unittest.TestCase):
 

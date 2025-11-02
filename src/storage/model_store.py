@@ -8,7 +8,8 @@ from typing import Dict, Optional, List
 from pathlib import Path
 from datetime import datetime
 from filelock import FileLock
-from src.models.anomaly_model import AnomalyDetectionModel
+from src.anomaly_models.anomaly_model import AnomalyDetectionModel
+from src.utils.logger import logger
 
 
 class ModelStore:
@@ -123,6 +124,7 @@ class ModelStore:
             }
 
             self._atomic_write(model_path, model_data)
+            logger.info(f"Saved model: series_id='{series_id}', version='{version}' to {model_path}")
 
         return version
 
@@ -150,6 +152,7 @@ class ModelStore:
                 versions = self._list_versions(series_id)
                 version = versions[-1] if versions else None
                 if version is None:
+                    logger.warning(f"No models found for series_id: {series_id}")
                     raise FileNotFoundError(f"No models found for series_id: {series_id}")
 
             model_path = self._get_model_path(series_id, version)
@@ -157,9 +160,12 @@ class ModelStore:
             try:
                 with open(model_path, 'r') as f:
                     model_data = json.load(f)
+                logger.debug(f"Loaded model: series_id='{series_id}', version='{version}' from {model_path}")
             except FileNotFoundError:
+                logger.warning(f"Model file not found: {model_path}")
                 raise FileNotFoundError(f"Model not found: {series_id}/{version}")
             except json.JSONDecodeError as e:
+                logger.error(f"Corrupted model file: {model_path}")
                 raise ValueError(f"Corrupted model file: {series_id}/{version}") from e
 
             model = AnomalyDetectionModel()

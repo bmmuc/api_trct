@@ -3,10 +3,12 @@ Service layer for anomaly detection business logic.
 """
 import time
 from typing import Optional
-from src.models.anomaly_model import AnomalyDetectionModel
+from src.anomaly_models.anomaly_model import AnomalyDetectionModel
 from src.models.schemas import TrainData, DataPoint, TrainResponse, PredictResponse
 from src.storage.model_store import ModelStore
 from src.utils.metrics import MetricsTracker
+from src.utils.logger import logger
+from src.exceptions import ModelNotFoundError, ModelNotFittedError
 
 
 class AnomalyDetectionService:
@@ -81,8 +83,12 @@ class AnomalyDetectionService:
         # Start timing
         start_time = time.time()
 
-        # Load model
-        model, used_version = self.model_store.load_model(series_id, version)
+        # Load model - this will raise ModelNotFoundError if not found
+        try:
+            model, used_version = self.model_store.load_model(series_id, version)
+        except FileNotFoundError:
+            logger.warning(f"Model not found for series_id='{series_id}', version='{version}'")
+            raise ModelNotFoundError(series_id, version)
 
         is_anomaly = model.predict(data_point)
 
