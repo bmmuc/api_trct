@@ -43,8 +43,12 @@ async def train_model(
             "Training request for series_id='%s' with %d data points",
             series_id, len(train_data.values)
         )
+        if not hasattr(train_data, 'metadata'):
+            metadata = None
+        else:
+            metadata = train_data.metadata
 
-        result = anomaly_service.train_model(series_id, train_data, train_data.metadata)
+        result = anomaly_service.train_model(series_id, train_data, metadata)
 
         logger.info(
             "Training completed for series_id='%s', version='%s'",
