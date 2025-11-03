@@ -68,7 +68,7 @@ class S3ModelStorage(BaseModelStorage):
         # Mock: head_object
         return False
 
-    def _generate_version(self, series_id: str) -> str:
+    def _generate_version(self, series_id: str) -> str:  # pylint: disable=unused-argument
         """Simulates version generation."""
         # Mock: list existing versions and increment
         return "v0"

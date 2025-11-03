@@ -10,7 +10,9 @@ from src.services.anomaly_service import AnomalyDetectionService
 from src.services.visualization_service import VisualizationService
 from src.utils.base_metrics import BaseMetricsExporter
 from src.utils.logger import logger
-from src.api.dependencies import get_anomaly_service, get_metrics_exporter, get_visualization_service
+from src.api.dependencies import (
+    get_anomaly_service, get_metrics_exporter, get_visualization_service
+)
 from src.exceptions import (
     ModelNotFoundError, ValidationError, InvalidSeriesIdError,
     ModelNotFittedError, AnomalyDetectionError

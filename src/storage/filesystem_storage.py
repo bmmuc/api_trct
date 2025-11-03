@@ -227,5 +227,5 @@ class FilesystemModelStorage(BaseModelStorage):
 
                 model_path = self._get_model_path(series_id, version)
                 return model_path.exists()
-        except Exception:  # noqa: BLE001
+        except (OSError, IOError, ValueError):
             return False

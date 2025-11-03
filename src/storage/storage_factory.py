@@ -6,7 +6,7 @@ from src.storage.filesystem_storage import FilesystemModelStorage
 from src.storage.s3_storage import S3ModelStorage
 
 
-class StorageFactory:
+class StorageFactory:  # pylint: disable=too-few-public-methods
     """Creates storage based on configuration."""
 
     @classmethod
@@ -14,7 +14,6 @@ class StorageFactory:
         """Instantiates storage by type."""
         if storage_type == "filesystem":
             return FilesystemModelStorage(**kwargs)
-        elif storage_type == "s3":
+        if storage_type == "s3":
             return S3ModelStorage(**kwargs)
-        else:
-            raise ValueError(f"Storage type '{storage_type}' not supported")
+        raise ValueError(f"Storage type '{storage_type}' not supported")

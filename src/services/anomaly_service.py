@@ -22,7 +22,9 @@ class AnomalyDetectionService:
         self.metrics_exporter = metrics_exporter
         self.training_service = training_service
 
-    def train_model(self, series_id: str, train_data: TrainData, metadata: dict = None) -> TrainResponse:
+    def train_model(
+            self, series_id: str, train_data: TrainData,
+            metadata: dict = None) -> TrainResponse:
         """Delegates training to configured training service."""
         return self.training_service.train(series_id, train_data, metadata)
 

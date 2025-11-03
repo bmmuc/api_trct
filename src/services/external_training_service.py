@@ -2,8 +2,8 @@
 External API training service implementation.
 """
 import time
-import requests
 from typing import Optional
+import requests
 from src.services.base_training_service import BaseTrainingService
 from src.models.schemas import TrainData, TrainResponse
 from src.utils.base_metrics import BaseMetricsExporter
@@ -11,7 +11,7 @@ from src.utils.logger import logger
 from src.exceptions import AnomalyDetectionError
 
 
-class ExternalTrainingService(BaseTrainingService):
+class ExternalTrainingService(BaseTrainingService):  # pylint: disable=too-few-public-methods
     """Training service that delegates training to an external API."""
 
     def __init__(self,

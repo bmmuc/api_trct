@@ -68,7 +68,8 @@ class AppConfig(BaseSettings):
     # Training configs
     external_training: ExternalTrainingConfig = ExternalTrainingConfig()
 
-    class Config:
+    class Config:  # pylint: disable=too-few-public-methods
+        """Pydantic configuration."""
         env_prefix = "APP_"
         case_sensitive = False
         env_nested_delimiter = "__"

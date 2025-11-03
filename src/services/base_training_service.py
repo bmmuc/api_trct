@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from src.models.schemas import TrainData, TrainResponse
 
 
-class BaseTrainingService(ABC):
+class BaseTrainingService(ABC):  # pylint: disable=too-few-public-methods
     """Base class for training services."""
 
     @abstractmethod
@@ -21,4 +21,3 @@ class BaseTrainingService(ABC):
         Returns:
             TrainResponse with training results
         """
-        pass

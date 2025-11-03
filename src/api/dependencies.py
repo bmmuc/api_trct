@@ -26,7 +26,7 @@ _training_lock = threading.Lock()
 
 def get_model_storage() -> BaseModelStorage:
     """Creates singleton of configured storage."""
-    global _model_storage_instance
+    global _model_storage_instance # pylint: disable=global-statement
 
     if _model_storage_instance is None:
         with _storage_lock:
@@ -48,7 +48,7 @@ def get_model_storage() -> BaseModelStorage:
 
 def get_metrics_exporter() -> BaseMetricsExporter:
     """Creates singleton of configured metrics exporter."""
-    global _metrics_exporter_instance
+    global _metrics_exporter_instance # pylint: disable=global-statement
 
     if _metrics_exporter_instance is None:
         with _metrics_lock:
@@ -72,7 +72,7 @@ def get_training_service(
     metrics_exporter: BaseMetricsExporter = Depends(get_metrics_exporter)
 ) -> BaseTrainingService:
     """Creates singleton of configured training service."""
-    global _training_service_instance
+    global _training_service_instance # pylint: disable=global-statement
 
     if _training_service_instance is None:
         with _training_lock:

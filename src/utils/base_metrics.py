@@ -1,39 +1,33 @@
 """
-Interface base para diferentes exportadores de métricas.
+Base interface for different metrics exporters.
 """
 from abc import ABC, abstractmethod
 from src.models.schemas import Metrics
 
 
 class BaseMetricsExporter(ABC):
-    """Interface para exportar métricas de diferentes formas."""
+    """Interface for exporting metrics in different ways."""
 
     @abstractmethod
     def record_training_latency(self, latency_ms: float):
-        """Registra latência de treino."""
-        pass
+        """Records training latency."""
 
     @abstractmethod
     def record_inference_latency(self, latency_ms: float):
-        """Registra latência de inferência."""
-        pass
+        """Records inference latency."""
 
     @abstractmethod
     def get_training_metrics(self) -> Metrics:
-        """Retorna métricas agregadas de treino."""
-        pass
+        """Returns aggregated training metrics."""
 
     @abstractmethod
     def get_inference_metrics(self) -> Metrics:
-        """Retorna métricas agregadas de inferência."""
-        pass
+        """Returns aggregated inference metrics."""
 
     @abstractmethod
     def export(self) -> str:
-        """Exporta métricas em formato específico (JSON, Prometheus, etc)."""
-        pass
+        """Exports metrics in specific format (JSON, Prometheus, etc)."""
 
     @abstractmethod
     def reset(self):
-        """Limpa métricas registradas."""
-        pass
+        """Clears recorded metrics."""

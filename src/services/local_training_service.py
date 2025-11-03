@@ -10,7 +10,7 @@ from src.utils.base_metrics import BaseMetricsExporter
 from src.config import config
 
 
-class LocalTrainingService(BaseTrainingService):
+class LocalTrainingService(BaseTrainingService):  # pylint: disable=too-few-public-methods
     """Training service that trains models locally."""
 
     def __init__(self, model_storage: BaseModelStorage,

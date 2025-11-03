@@ -6,7 +6,7 @@ from src.anomaly_models.statistical_model import StatisticalAnomalyModel
 from src.anomaly_models.sklearn_model import SklearnAnomalyModel
 
 
-class ModelFactory:
+class ModelFactory:  # pylint: disable=too-few-public-methods
     """Creates models based on configured type."""
 
     _registry = {
@@ -22,4 +22,3 @@ class ModelFactory:
 
         model_class = cls._registry[model_type]
         return model_class(**kwargs)
-

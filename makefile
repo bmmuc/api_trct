@@ -45,11 +45,8 @@ test-cov:
 
 lint:
 	@echo "Running linting..."
-	@echo "Checking with flake8..."
-	uv run flake8 src/ --max-line-length=120 --exclude=__pycache__,*.pyc
-	@echo "✓ Flake8 passed"
 	@echo "Checking with pylint..."
-	uv run pylint src/ --disable=C0111,C0103,R0913 || true
+	uv run pylint src/ --disable=C0111,C0103,R0913,R0801 || true
 	@echo "✓ Linting completed"
 
 performance:

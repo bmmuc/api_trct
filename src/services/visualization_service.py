@@ -6,7 +6,7 @@ from typing import Optional
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt  # noqa: E402 pylint: disable=wrong-import-position
-from src.storage.base_storage import BaseModelStorage  # noqa: E402
+from src.storage.base_storage import BaseModelStorage  # noqa: E402 pylint: disable=wrong-import-position
 from src.exceptions import ModelNotFoundError  # noqa: E402 pylint: disable=wrong-import-position
 from src.utils.logger import logger  # noqa: E402 pylint: disable=wrong-import-position
 
