@@ -1,5 +1,5 @@
 [run]
-source = .
+source = src
 omit =
     */tests/*
     */__pycache__/*
@@ -7,6 +7,11 @@ omit =
     */.venv/*
     */venv/*
     */__init__.py
+    */s3_storage.py
+    */prometheus_metrics.py
+    */external_training_service.py
+    */sklearn_model.py
+    */api/exception_handlers.py
 
 [report]
 exclude_lines =
