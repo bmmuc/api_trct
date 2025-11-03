@@ -1,8 +1,12 @@
 """
  Anomaly models package.
  """
-from src.anomaly_models.anomaly_model import AnomalyDetectionModel
+from src.anomaly_models.model_factory import ModelFactory
+from src.anomaly_models.statistical_model import StatisticalAnomalyModel
+from src.anomaly_models.sklearn_model import SklearnAnomalyModel
 
 __all__ = [
-    "AnomalyDetectionModel",
+    "ModelFactory",
+   "StatisticalAnomalyModel",
+   "SklearnAnomalyModel",
 ]

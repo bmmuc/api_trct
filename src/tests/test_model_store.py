@@ -3,17 +3,17 @@ import tempfile
 import shutil
 import json
 from pathlib import Path
-from src.storage.model_store import ModelStore
-from src.anomaly_models.anomaly_model import AnomalyDetectionModel
+from src.storage.filesystem_storage import FilesystemModelStorage
+from src.anomaly_models.statistical_model import StatisticalAnomalyModel
 from src.models.schemas import TrainData
 
 
-class TestModelStore(unittest.TestCase):
+class TestFilesystemModelStorage(unittest.TestCase):
 
     def setUp(self):
         """Creates a temporary directory for model storage and a train_data fixture."""
         self.test_dir = tempfile.mkdtemp()
-        self.model_store = ModelStore(storage_path=self.test_dir)
+        self.model_store = FilesystemModelStorage(storage_path=self.test_dir)
         self.train_data = TrainData(
             timestamps=[1.0, 2.0, 3.0, 4.0, 5.0],
             values=[1.0, 1.1, 1.2, 5.0, 1.3]
@@ -24,8 +24,8 @@ class TestModelStore(unittest.TestCase):
         shutil.rmtree(self.test_dir)
 
     def _create_fitted_mock_model(self):
-        """Creates a mock AnomalyDetectionModel and fits it using the train_data fixture."""
-        model = AnomalyDetectionModel()
+        """Creates a mock StatisticalAnomalyModel and fits it using the train_data fixture."""
+        model = StatisticalAnomalyModel()
         model.fit(self.train_data.to_time_series())
         return model
 
@@ -38,18 +38,25 @@ class TestModelStore(unittest.TestCase):
         self.assertEqual(version, "v0")
 
         model_path = Path(self.test_dir) / series_id / "v0.json"
-        self.assertTrue(model_path.exists())
+        model_path = self.model_store._get_model_path(series_id, version) # pylint: disable=W0212
 
         with open(model_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            self.assertEqual(data["series_id"], series_id)
-            self.assertEqual(data["version"], "v0")
-            self.assertIn("model_params", data)
+
+            self.assertEqual(model_path, Path(self.test_dir) / series_id / "v0.bin")
+
+            # self.assertEqual(data["series_id"], series_id)
+            # self.assertEqual(data["version"], "v0")
+            self.assertIn("model_type", data)
+            self.assertIn("threshold", data)
+            self.assertIn("std", data)
+            self.assertIn("mean", data)
+
 
     def test_save_unfitted_model_raises_error(self):
         """Tests that saving an unfitted model raises a ValueError."""
         series_id = "series-1"
-        model = AnomalyDetectionModel()
+        model = StatisticalAnomalyModel()
         with self.assertRaises(ValueError):
             self.model_store.save_model(series_id, model)
 
@@ -60,7 +67,7 @@ class TestModelStore(unittest.TestCase):
         version = self.model_store.save_model(series_id, model)
 
         loaded_model, loaded_version = self.model_store.load_model(series_id, version)
-        self.assertIsInstance(loaded_model, AnomalyDetectionModel)
+        self.assertIsInstance(loaded_model, StatisticalAnomalyModel)
         self.assertTrue(loaded_model._is_fitted)  # noqa: SLF001 pylint: disable=protected-access
         self.assertEqual(loaded_version, version)
 

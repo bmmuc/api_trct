@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock
 from src.services.anomaly_service import AnomalyDetectionService
 from src.models.schemas import TrainData, DataPoint, TrainResponse
-from src.anomaly_models.anomaly_model import AnomalyDetectionModel
+from src.anomaly_models.statistical_model import StatisticalAnomalyModel
 
 
 class TestAnomalyDetectionService(unittest.TestCase):
@@ -48,7 +48,7 @@ class TestAnomalyDetectionService(unittest.TestCase):
         series_id = "test-series"
         data_point = DataPoint(timestamp=1.0, value=10.0)
 
-        mock_model = AnomalyDetectionModel()
+        mock_model = StatisticalAnomalyModel()
         mock_model.mean = 1.0
         mock_model.std = 0.5
 
@@ -67,7 +67,7 @@ class TestAnomalyDetectionService(unittest.TestCase):
         data_point = DataPoint(timestamp=1.0, value=1.1)
         version = "v2"
 
-        mock_model = AnomalyDetectionModel()
+        mock_model = StatisticalAnomalyModel()
         mock_model.mean = 1.0
         mock_model.std = 0.5
 
