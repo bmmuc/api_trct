@@ -10,7 +10,7 @@ from src.utils.base_metrics import BaseMetricsExporter
 
 
 class MemoryMetricsExporter(BaseMetricsExporter):
-    """Armazena métricas em memória e exporta como JSON."""
+    """Store and export metrics in memory."""
 
     def __init__(self, max_samples: int = 10000):
         self._training_latencies: deque = deque(maxlen=max_samples)
