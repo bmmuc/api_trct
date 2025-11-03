@@ -1,9 +1,9 @@
 """API routes for anomaly detection service."""
-from typing import Optional
+from typing import Optional, Union
 from fastapi import APIRouter, Query, Depends, HTTPException
 from fastapi.responses import Response
 from src.models.schemas import (
-    TrainData, TrainResponse, PredictData, PredictResponse,
+    TrainData, TrainDataExternal, TrainResponse, PredictData, PredictResponse,
     HealthCheckResponse, validate_series_id
 )
 from src.services.anomaly_service import AnomalyDetectionService
@@ -22,10 +22,17 @@ router = APIRouter()
 @router.post("/fit/{series_id}", response_model=TrainResponse, tags=["Training"])
 async def train_model(
     series_id: str,
-    train_data: TrainData,
+    train_data: Union[TrainData, TrainDataExternal],
     anomaly_service: AnomalyDetectionService = Depends(get_anomaly_service)
 ) -> TrainResponse:
-    """Train an anomaly detection model for a specific time series."""
+    """
+    Train an anomaly detection model for a specific time series.
+
+    Args:
+        series_id: Identifier for the time series
+        train_data: Training data with timestamps, values, and optional metadata
+        anomaly_service: Injected anomaly detection service
+    """
     try:
         # Validate series_id format
         validate_series_id(series_id)
@@ -35,7 +42,7 @@ async def train_model(
             series_id, len(train_data.values)
         )
 
-        result = anomaly_service.train_model(series_id, train_data)
+        result = anomaly_service.train_model(series_id, train_data, train_data.metadata)
 
         logger.info(
             "Training completed for series_id='%s', version='%s'",

@@ -1,7 +1,7 @@
 """
 Pydantic models for Time Series data structures and API requests/responses.
 """
-from typing import Sequence, List
+from typing import Sequence, List, Optional
 import re
 import math
 import numpy as np
@@ -60,7 +60,6 @@ class TimeSeries(BaseModel):
             "of subsequent measurements of some quantity"
         )
     )
-
 
 class TrainData(BaseModel):
     """Request model for training endpoint."""
@@ -150,6 +149,11 @@ class TrainData(BaseModel):
         ]
         return TimeSeries(data=data_points)
 
+class TrainDataExternal(TrainData):
+    metadata: dict = Field(
+        default_factory=dict,
+        description="Optional metadata to pass to the training service (useful for external APIs)"
+    )
 
 class TrainResponse(BaseModel):
     """Response model for training endpoint."""

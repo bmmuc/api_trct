@@ -37,6 +37,13 @@ class PrometheusMetricsConfig(BaseModel):
     namespace: str = "anomaly_detection"
 
 
+class ExternalTrainingConfig(BaseModel):
+    """Config for external training API."""
+    api_url: str = ""
+    api_key: str = ""
+    timeout: int = 30
+
+
 class AppConfig(BaseSettings):
     """Application settings."""
 
@@ -44,6 +51,7 @@ class AppConfig(BaseSettings):
     model_type: str = "statistical"
     storage_type: str = "filesystem"
     metrics_type: str = "memory"
+    training_type: str = "local"  # "local" or "external"
 
     # Model configs
     statistical: StatisticalModelConfig = StatisticalModelConfig()
@@ -56,6 +64,9 @@ class AppConfig(BaseSettings):
     # Metrics configs
     memory: MemoryMetricsConfig = MemoryMetricsConfig()
     prometheus: PrometheusMetricsConfig = PrometheusMetricsConfig()
+
+    # Training configs
+    external_training: ExternalTrainingConfig = ExternalTrainingConfig()
 
     class Config:
         env_prefix = "APP_"

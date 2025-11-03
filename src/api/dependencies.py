@@ -6,6 +6,9 @@ import threading
 from fastapi import Depends
 from src.services.anomaly_service import AnomalyDetectionService
 from src.services.visualization_service import VisualizationService
+from src.services.base_training_service import BaseTrainingService
+from src.services.local_training_service import LocalTrainingService
+from src.services.external_training_service import ExternalTrainingService
 from src.storage.base_storage import BaseModelStorage
 from src.storage.storage_factory import StorageFactory
 from src.utils.base_metrics import BaseMetricsExporter
@@ -14,9 +17,11 @@ from src.config import config
 
 _model_storage_instance: BaseModelStorage | None = None
 _metrics_exporter_instance: BaseMetricsExporter | None = None
+_training_service_instance: BaseTrainingService | None = None
 
 _storage_lock = threading.Lock()
 _metrics_lock = threading.Lock()
+_training_lock = threading.Lock()
 
 
 def get_model_storage() -> BaseModelStorage:
@@ -62,12 +67,39 @@ def get_metrics_exporter() -> BaseMetricsExporter:
     return _metrics_exporter_instance
 
 
-def get_anomaly_service(
+def get_training_service(
     model_storage: BaseModelStorage = Depends(get_model_storage),
     metrics_exporter: BaseMetricsExporter = Depends(get_metrics_exporter)
+) -> BaseTrainingService:
+    """Creates singleton of configured training service."""
+    global _training_service_instance
+
+    if _training_service_instance is None:
+        with _training_lock:
+            if _training_service_instance is None:
+                if config.training_type == "local":
+                    _training_service_instance = LocalTrainingService(
+                        model_storage=model_storage,
+                        metrics_exporter=metrics_exporter
+                    )
+                elif config.training_type == "external":
+                    _training_service_instance = ExternalTrainingService(
+                        api_url=config.external_training.api_url,
+                        metrics_exporter=metrics_exporter,
+                        api_key=config.external_training.api_key,
+                        timeout=config.external_training.timeout
+                    )
+
+    return _training_service_instance
+
+
+def get_anomaly_service(
+    model_storage: BaseModelStorage = Depends(get_model_storage),
+    metrics_exporter: BaseMetricsExporter = Depends(get_metrics_exporter),
+    training_service: BaseTrainingService = Depends(get_training_service)
 ) -> AnomalyDetectionService:
     """Injects service with abstract dependencies."""
-    return AnomalyDetectionService(model_storage, metrics_exporter)
+    return AnomalyDetectionService(model_storage, metrics_exporter, training_service)
 
 
 def get_visualization_service(
