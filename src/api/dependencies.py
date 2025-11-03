@@ -1,89 +1,77 @@
 """
 Dependency injection providers for FastAPI routes.
-
-This module defines dependency provider functions that FastAPI will use to inject
-dependencies into route handlers via the Depends() mechanism.
-
+Uses factories to create configurable backends.
 """
 import threading
 from fastapi import Depends
 from src.services.anomaly_service import AnomalyDetectionService
 from src.services.visualization_service import VisualizationService
-from src.storage.model_store import ModelStore
-from src.utils.metrics import MetricsTracker
+from src.storage.base_storage import BaseModelStorage
+from src.storage.storage_factory import StorageFactory
+from src.utils.base_metrics import BaseMetricsExporter
+from src.utils.metrics_factory import MetricsFactory
+from src.config import config
 
-_model_store_instance: ModelStore | None = None
-_metrics_tracker_instance: MetricsTracker | None = None
+_model_storage_instance: BaseModelStorage | None = None
+_metrics_exporter_instance: BaseMetricsExporter | None = None
 
-_model_store_lock = threading.Lock()
-_metrics_tracker_lock = threading.Lock()
-
-
-def get_model_store() -> ModelStore:
-    """
-    Dependency provider for ModelStore with thread-safe singleton initialization.
-
-    Returns:
-        ModelStore: Singleton instance of ModelStore
-    """
-    global _model_store_instance  # pylint: disable=global-statement
-
-    # Double-checked locking pattern
-    if _model_store_instance is None:
-        with _model_store_lock:
-            # Check again inside lock to prevent race condition
-            if _model_store_instance is None:
-                _model_store_instance = ModelStore()
-
-    return _model_store_instance
+_storage_lock = threading.Lock()
+_metrics_lock = threading.Lock()
 
 
-def get_metrics_tracker() -> MetricsTracker:
-    """
-    Dependency provider for MetricsTracker.
+def get_model_storage() -> BaseModelStorage:
+    """Creates singleton of configured storage."""
+    global _model_storage_instance
 
-    Returns:
-        MetricsTracker: Singleton instance of MetricsTracker
-    """
-    global _metrics_tracker_instance  # pylint: disable=global-statement
+    if _model_storage_instance is None:
+        with _storage_lock:
+            if _model_storage_instance is None:
+                if config.storage_type == "filesystem":
+                    _model_storage_instance = StorageFactory.create(
+                        "filesystem",
+                        storage_path=config.filesystem.storage_path
+                    )
+                elif config.storage_type == "s3":
+                    _model_storage_instance = StorageFactory.create(
+                        "s3",
+                        bucket_name=config.s3.bucket,
+                        prefix=config.s3.prefix
+                    )
 
-    # Double-checked locking pattern
-    if _metrics_tracker_instance is None:
-        with _metrics_tracker_lock:
-            # Check again inside lock to prevent race condition
-            if _metrics_tracker_instance is None:
-                _metrics_tracker_instance = MetricsTracker()
+    return _model_storage_instance
 
-    return _metrics_tracker_instance
+
+def get_metrics_exporter() -> BaseMetricsExporter:
+    """Creates singleton of configured metrics exporter."""
+    global _metrics_exporter_instance
+
+    if _metrics_exporter_instance is None:
+        with _metrics_lock:
+            if _metrics_exporter_instance is None:
+                if config.metrics_type == "memory":
+                    _metrics_exporter_instance = MetricsFactory.create(
+                        "memory",
+                        max_samples=config.memory.max_samples
+                    )
+                elif config.metrics_type == "prometheus":
+                    _metrics_exporter_instance = MetricsFactory.create(
+                        "prometheus",
+                        namespace=config.prometheus.namespace
+                    )
+
+    return _metrics_exporter_instance
 
 
 def get_anomaly_service(
-    model_store: ModelStore = Depends(get_model_store),
-    metrics_tracker: MetricsTracker = Depends(get_metrics_tracker)
+    model_storage: BaseModelStorage = Depends(get_model_storage),
+    metrics_exporter: BaseMetricsExporter = Depends(get_metrics_exporter)
 ) -> AnomalyDetectionService:
-    """
-    Dependency provider for AnomalyDetectionService.
-
-    Args:
-        model_store: Injected by FastAPI via get_model_store()
-        metrics_tracker: Injected by FastAPI via get_metrics_tracker()
-
-    Returns:
-        AnomalyDetectionService: New instance with injected dependencies
-    """
-    return AnomalyDetectionService(model_store, metrics_tracker)
+    """Injects service with abstract dependencies."""
+    return AnomalyDetectionService(model_storage, metrics_exporter)
 
 
 def get_visualization_service(
-    model_store: ModelStore = Depends(get_model_store)
+    model_storage: BaseModelStorage = Depends(get_model_storage)
 ) -> VisualizationService:
-    """
-    Dependency provider for VisualizationService.
-
-    Args:
-        model_store: Injected by FastAPI via get_model_store()
-
-    Returns:
-        VisualizationService: New instance with injected dependencies
-    """
-    return VisualizationService(model_store)
+    """Injects visualization service."""
+    return VisualizationService(model_storage)

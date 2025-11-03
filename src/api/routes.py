@@ -8,9 +8,9 @@ from src.models.schemas import (
 )
 from src.services.anomaly_service import AnomalyDetectionService
 from src.services.visualization_service import VisualizationService
-from src.utils.metrics import MetricsTracker
+from src.utils.base_metrics import BaseMetricsExporter
 from src.utils.logger import logger
-from src.api.dependencies import get_anomaly_service, get_metrics_tracker, get_visualization_service
+from src.api.dependencies import get_anomaly_service, get_metrics_exporter, get_visualization_service
 from src.exceptions import (
     ModelNotFoundError, ValidationError, InvalidSeriesIdError,
     ModelNotFittedError, AnomalyDetectionError
@@ -110,7 +110,7 @@ async def predict_anomaly(
 @router.get("/healthcheck", response_model=HealthCheckResponse, tags=["Health Check"])
 async def healthcheck(
     anomaly_service: AnomalyDetectionService = Depends(get_anomaly_service),
-    metrics_tracker: MetricsTracker = Depends(get_metrics_tracker)
+    metrics_exporter: BaseMetricsExporter = Depends(get_metrics_exporter)
 ) -> HealthCheckResponse:
     """Get system health and performance metrics."""
     try:
@@ -118,8 +118,8 @@ async def healthcheck(
         series_trained = anomaly_service.get_trained_series_count()
 
         # Get latency metrics
-        inference_metrics = metrics_tracker.get_inference_metrics()
-        training_metrics = metrics_tracker.get_training_metrics()
+        inference_metrics = metrics_exporter.get_inference_metrics()
+        training_metrics = metrics_exporter.get_training_metrics()
 
         logger.debug(
             "Health check: %d series trained, avg inference latency: %sms",

@@ -1,27 +1,21 @@
 """
-Visualization service for plotting time series data and anomaly detection results.
+Visualization service using abstract storage.
 """
 import io
 from typing import Optional
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt  # noqa: E402 pylint: disable=wrong-import-position
-from src.storage.model_store import ModelStore  # noqa: E402 pylint: disable=wrong-import-position
+from src.storage.base_storage import BaseModelStorage  # noqa: E402
 from src.exceptions import ModelNotFoundError  # noqa: E402 pylint: disable=wrong-import-position
 from src.utils.logger import logger  # noqa: E402 pylint: disable=wrong-import-position
 
 
 class VisualizationService:  # pylint: disable=too-few-public-methods
-    """Service for creating time series visualizations."""
+    """Visualization service using abstract storage."""
 
-    def __init__(self, model_store: ModelStore):
-        """
-        Initialize the visualization service.
-
-        Args:
-            model_store: ModelStore instance for loading models
-        """
-        self.model_store = model_store
+    def __init__(self, model_storage: BaseModelStorage):
+        self.model_storage = model_storage
 
     def plot_time_series(
         self,
@@ -44,7 +38,7 @@ class VisualizationService:  # pylint: disable=too-few-public-methods
             ModelNotFoundError: If model for series_id doesn't exist
         """
         try:
-            model, used_version = self.model_store.load_model(series_id, version)
+            model, used_version = self.model_storage.load_model(series_id, version)
         except FileNotFoundError as exc:
             logger.warning(
                 "Model not found for visualization: series_id='%s', version='%s'",
